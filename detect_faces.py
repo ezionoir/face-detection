@@ -51,7 +51,7 @@ if __name__ == '__main__':
             results = detector.batched_detect(stack(batch, axis=0))
             for j, result in enumerate(results):
                 if result is not None and result.shape[0] > 0 and result.shape[1] > 0:
-                    dict[i * options.batch_size + j] = result.tolist()
+                    dict[i * options.batch_size + j] = (result[:, :-1] * options.donwscale).tolist()
                 else:
                     dict[i * options.batch_size + j] = []
 
