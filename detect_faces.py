@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
 
     options = parser.parse_args()
+    print(options)
 
     if options.device == 'gpu':
         options.device = 'cuda:0'
@@ -33,13 +34,13 @@ if __name__ == '__main__':
 
         video = cv2.VideoCapture(video_path)
 
-        num_frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
+        num_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
         num_batches = (num_frames + options.batch_size - 1) // options.batch_size
 
         for i in range(num_batches):
             batch = []
 
-            while True:
+            for j in range(options.batch_size):
                 success, frame = video.read()
                 if not success:
                     break
@@ -51,10 +52,10 @@ if __name__ == '__main__':
             results = detector.batched_detect(stack(batch, axis=0))
             for j, result in enumerate(results):
                 if result is not None and result.shape[0] > 0 and result.shape[1] > 0:
-                    dict[i * options.batch_size + j] = (result[:, :-1] * options.donwscale).tolist()
+                    dict[i * options.batch_size + j] = (result[:, :-1] * options.downscale).tolist()
                 else:
                     dict[i * options.batch_size + j] = []
 
-        file_name = os.path.basename(video_path)
+        file_name = os.path.basename(video_path).split('.')[0]
         with open(os.path.join(options.output_path, file_name + '.json'), 'w') as f:
-            json.dump(f)
+            json.dump(dict, f)

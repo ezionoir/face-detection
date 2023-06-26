@@ -3,7 +3,7 @@ import os
 import json
 import cv2
 from multiprocessing import Pool
-import tqdm
+from tqdm import tqdm
 from functools import partial
 
 from utils import get_video_paths
@@ -15,10 +15,10 @@ def crop_frames(video_path, box_folder, output_folder):
     with open(os.path.join(box_folder, name + '.json'), 'r') as f:
         dict = json.load(f)
 
-    os.path.mkdir(os.path.join(output_folder, name))
+    os.mkdir(os.path.join(output_folder, name))
 
     video = cv2.VideoCapture(video_path)
-    num_frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
+    num_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
 
     for i in range(num_frames):
         success, frame = video.read()
@@ -40,9 +40,9 @@ if __name__ == '__main__':
     parser = ArgumentParser()
 
     parser.add_argument('--videos_path', help='Path to videos')
-    parser.add_argument('--boxes path', help='Path to bounding boxes')
+    parser.add_argument('--boxes_path', help='Path to bounding boxes')
     parser.add_argument('--output_path', help='Path to output folder')
-    parser.add_argument('--workers', help='Nmber of workers')
+    parser.add_argument('--workers', type=int, default=1, help='Nmber of workers')
 
     options = parser.parse_args()
 
@@ -51,4 +51,4 @@ if __name__ == '__main__':
     with Pool(processes=options.workers) as p:
         with tqdm(total=len(video_paths)) as pbar:
             for video in p.imap_unordered(partial(crop_frames, box_folder = options.boxes_path, output_folder = options.output_path), video_paths):
-                video.update()
+                pbar.update()
